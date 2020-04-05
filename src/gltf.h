@@ -1,10 +1,5 @@
 #pragma once
 
-#include <stdlib.h>
-#include <string>
-#include <fstream>
-#include <vector>
-
 #include "external/tiny_gltf.h"
 
 #define MAX_NUM_JOINTS 128u
@@ -143,9 +138,6 @@ struct Node {
 			mesh->uniformBlock.jointMatrix[i] = jointMat;
 			}
 			mesh->uniformBlock.jointcount = (float)numJoints;
-			//memcpy(mesh->uniformBuffer.mapped, &mesh->uniformBlock, sizeof(mesh->uniformBlock));
-			} else {
-			//memcpy(mesh->uniformBuffer.mapped, &m, sizeof(glm::mat4));
 			}
 		}
 

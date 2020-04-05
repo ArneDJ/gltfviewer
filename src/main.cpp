@@ -191,8 +191,6 @@ void game_loop(SDL_Window *window, std::string fpath)
 	struct mesh cube = make_cubemap();
  	GLuint cubemap = load_cubemap_texture(cubemap_fpath);
 	Shader skybox = skybox_shader();
-	GLuint tex = load_DDS_texture("media/textures/duck.dds");
-	GLuint VAO = init();
 	Shader shader = base_shader();
 	Camera cam(glm::vec3(1.0, 1.0, 1.0));
 
@@ -223,8 +221,6 @@ void game_loop(SDL_Window *window, std::string fpath)
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, tex);
 		shader.bind();
 		testmodel.display(&shader);
 
@@ -244,7 +240,7 @@ void game_loop(SDL_Window *window, std::string fpath)
 int main(int argc, char *argv[])
 {
 	SDL_Init(SDL_INIT_VIDEO);
-	SDL_Window *window = SDL_CreateWindow("demo", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINWIDTH, WINHEIGHT, SDL_WINDOW_OPENGL);
+	SDL_Window *window = SDL_CreateWindow("glTF viewer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WINWIDTH, WINHEIGHT, SDL_WINDOW_OPENGL);
 
 	if (window == NULL) {
 		std::cerr << "error: could not create window: " << SDL_GetError() << std::endl;

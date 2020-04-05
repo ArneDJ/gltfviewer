@@ -23,5 +23,5 @@ void main(void)
 	float metallic = metalrough.b;
 	//fcolor = vec4(vec3(metallic), 1.0);
 	//fcolor = vec4(normalbump, 1.0);
-	fcolor = vec4(basedcolor, 1.0);
+	fcolor = vec4(basecolor, 1.0);
 }
