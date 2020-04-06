@@ -27,14 +27,6 @@ struct Material {
 	GLuint normalTexture;
 	GLuint occlusionTexture;
 	GLuint emissiveTexture;
-	struct TexCoordSets {
-	uint8_t baseColor = 0;
-	uint8_t metallicRoughness = 0;
-	uint8_t specularGlossiness = 0;
-	uint8_t normal = 0;
-	uint8_t occlusion = 0;
-	uint8_t emissive = 0;
-	} texCoordSets;
 };
 
 struct Primitive {
@@ -43,10 +35,10 @@ struct Primitive {
 	uint32_t firstVertex;
 	uint32_t vertexCount;
 	Material &material;
-	bool hasIndices;
+	bool indexed;
 
 	Primitive(uint32_t firstIndex, uint32_t indexCount, uint32_t firstVertex, uint32_t vertexCount, Material &material) : firstIndex(firstIndex), indexCount(indexCount), firstVertex(firstVertex), vertexCount(vertexCount), material(material) {
-		hasIndices = indexCount > 0;
+		indexed = indexCount > 0;
 	};
 };
 

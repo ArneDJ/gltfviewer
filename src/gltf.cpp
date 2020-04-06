@@ -153,10 +153,10 @@ void gltf::Model::loadNode(gltf::Node *parent, const tinygltf::Node &node, uint3
 			uint32_t indexCount = 0;
 			uint32_t vertexCount = 0;
 			bool hasSkin = false;
-     			bool hasIndices = primitive.indices > -1;
+     			bool indexed = primitive.indices > -1;
 
 			// Indices
-			if (hasIndices) {
+			if (indexed) {
 				const tinygltf::Accessor &accessor = model.accessors[primitive.indices > -1 ? primitive.indices : 0];
 				const tinygltf::BufferView &bufferView = model.bufferViews[accessor.bufferView];
 				const tinygltf::Buffer &buffer = model.buffers[bufferView.buffer];
@@ -431,13 +431,21 @@ void gltf::Model::loadMaterials(tinygltf::Model &gltfModel)
 {
 	for (tinygltf::Material &mat : gltfModel.materials) {
     gltf::Material material{};
+
+    // specular diffuse model
+    if (mat.extensions.find("KHR_materials_pbrSpecularGlossiness") != mat.extensions.end()) {
+     auto ext = mat.extensions.find("KHR_materials_pbrSpecularGlossiness");
+     if (ext->second.Has("diffuseTexture")) {
+      auto index = ext->second.Get("diffuseTexture").Get("index");
+      material.baseColorTexture = textures[index.Get<int>()];
+     }
+    }
+
     if (mat.values.find("baseColorTexture") != mat.values.end()) {
      material.baseColorTexture = textures[mat.values["baseColorTexture"].TextureIndex()];
-     material.texCoordSets.baseColor = mat.values["baseColorTexture"].TextureTexCoord();
     }
     if (mat.values.find("metallicRoughnessTexture") != mat.values.end()) {
      material.metallicRoughnessTexture = textures[mat.values["metallicRoughnessTexture"].TextureIndex()];
-     material.texCoordSets.metallicRoughness = mat.values["metallicRoughnessTexture"].TextureTexCoord();
     }
     if (mat.values.find("roughnessFactor") != mat.values.end()) {
      material.roughnessFactor = static_cast<float>(mat.values["roughnessFactor"].Factor());
@@ -450,33 +458,13 @@ void gltf::Model::loadMaterials(tinygltf::Model &gltfModel)
     }
     if (mat.additionalValues.find("normalTexture") != mat.additionalValues.end()) {
      material.normalTexture = textures[mat.additionalValues["normalTexture"].TextureIndex()];
-     material.texCoordSets.normal = mat.additionalValues["normalTexture"].TextureTexCoord();
     }
     if (mat.additionalValues.find("emissiveTexture") != mat.additionalValues.end()) {
      material.emissiveTexture = textures[mat.additionalValues["emissiveTexture"].TextureIndex()];
-     material.texCoordSets.emissive = mat.additionalValues["emissiveTexture"].TextureTexCoord();
     }
     if (mat.additionalValues.find("occlusionTexture") != mat.additionalValues.end()) {
      material.occlusionTexture = textures[mat.additionalValues["occlusionTexture"].TextureIndex()];
-     material.texCoordSets.occlusion = mat.additionalValues["occlusionTexture"].TextureTexCoord();
     }
-    /*
-    if (mat.additionalValues.find("alphaMode") != mat.additionalValues.end()) {
-     tinygltf::Parameter param = mat.additionalValues["alphaMode"];
-     if (param.string_value == "BLEND") {
-      material.alphaMode = Material::ALPHAMODE_BLEND;
-     }
-     if (param.string_value == "MASK") {
-      material.alphaCutoff = 0.5f;
-      material.alphaMode = Material::ALPHAMODE_MASK;
-     }
-    }
-    */
-    /*
-    if (mat.additionalValues.find("alphaCutoff") != mat.additionalValues.end()) {
-     material.alphaCutoff = static_cast<float>(mat.additionalValues["alphaCutoff"].Factor());
-    }
-    */
     if (mat.additionalValues.find("emissiveFactor") != mat.additionalValues.end()) {
      material.emissiveFactor = glm::vec4(glm::make_vec3(mat.additionalValues["emissiveFactor"].ColorFactor().data()), 1.0);
      material.emissiveFactor = glm::vec4(0.0f);
@@ -509,7 +497,6 @@ void gltf::Model::importf(std::string fpath, float scale)
 	std::vector<Vertex> vertexBuffer;
 
 	if (fileLoaded) {
-		//loadTextureSamplers(gltfModel);
 		loadTextures(gltfModel);
 		loadMaterials(gltfModel);
 		const tinygltf::Scene &scene = gltfModel.scenes[gltfModel.defaultScene > -1 ? gltfModel.defaultScene : 0];
@@ -609,7 +596,7 @@ void gltf::Model::display(Shader *shader)
 	for (gltf::Node *node : linearNodes) {
 		if (node->mesh) {
 			glm::mat4 m = node->getMatrix();
-			//shader->uniform_mat4("model", glm::scale(m, glm::vec3(0.01, 0.01, 0.01)));
+			//shader->uniform_mat4("model", glm::scale(m, glm::vec3(0.1, 0.1, 0.1)));
 			shader->uniform_mat4("model", m);
 			shader->uniform_array_mat4("u_joint_matrix", node->mesh->uniformBlock.jointcount, node->mesh->uniformBlock.jointMatrix); 
 			for (const gltf::Primitive *prim : node->mesh->primitives) {
@@ -622,7 +609,7 @@ glActiveTexture(GL_TEXTURE2);
 glBindTexture(GL_TEXTURE_2D, prim->material.normalTexture);
 
 
-				if (prim->hasIndices == false) {
+				if (prim->indexed == false) {
 					glDrawArrays(GL_TRIANGLES, prim->firstVertex, prim->vertexCount);
 				} else {
 					glDrawElementsBaseVertex(GL_TRIANGLES, prim->indexCount, GL_UNSIGNED_INT, (GLvoid *)((prim->firstIndex)*sizeof(GL_UNSIGNED_INT)), prim->firstVertex);

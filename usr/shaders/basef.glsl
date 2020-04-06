@@ -8,7 +8,7 @@ layout(binding = 2) uniform sampler2D normalmap;
 uniform vec3 basedcolor;
 
 in VERTEX {
-	vec3 color;
+	vec3 normal;
 	vec2 texcoord;
 } fragment;
 
@@ -24,4 +24,7 @@ void main(void)
 	//fcolor = vec4(vec3(metallic), 1.0);
 	//fcolor = vec4(normalbump, 1.0);
 	fcolor = vec4(basecolor, 1.0);
+
+	float gamma = 1.6;
+ 	fcolor.rgb = pow(fcolor.rgb, vec3(1.0/gamma));
 }

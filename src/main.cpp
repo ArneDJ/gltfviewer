@@ -77,49 +77,6 @@ struct mesh make_cubemap(void)
 	return m;
 }
 
-GLuint init(void)
-{
-	GLuint VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
-
-	const GLfloat vertices[] = {
-	// positions          // colors           // texture coords
-	0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-	0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-	-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-	-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left
-	};
-
-	GLuint indices[] = {
-		0, 1, 3,
-		1, 2, 3 
-	};
-
-	GLuint EBO;
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	
-	GLuint VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// color attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	// texture coord attribute
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-	return VAO;
-}
-
 Shader base_shader(void)
 {
 	struct shaderinfo pipeline[] = {
@@ -133,7 +90,7 @@ Shader base_shader(void)
 	shader.bind();
 
 	const float aspect = (float)WINWIDTH/(float)WINHEIGHT;
-	glm::mat4 project = glm::perspective(glm::radians(90.f), aspect, 0.1f, 200.f);
+	glm::mat4 project = glm::perspective(glm::radians(90.f), aspect, 0.1f, 800.f);
 	shader.uniform_mat4("project", project);
 
 	glm::mat4 model = glm::mat4(1.f);
@@ -161,19 +118,13 @@ Shader skybox_shader(void)
 	return shader;
 }
 
-void display(GLuint VAO)
-{
-	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
-}
-
 void display_skybox(struct mesh skybox)
 {
 	glBindVertexArray(skybox.VAO);
 	glDrawElements(skybox.mode, skybox.ecount, skybox.etype, NULL);
 }
 
-void game_loop(SDL_Window *window, std::string fpath)
+void render_loop(SDL_Window *window, std::string fpath)
 {
 	SDL_SetRelativeMouseMode(SDL_TRUE);
 
@@ -194,32 +145,33 @@ void game_loop(SDL_Window *window, std::string fpath)
 	Shader shader = base_shader();
 	Camera cam(glm::vec3(1.0, 1.0, 1.0));
 
-	bool running = true;
 	SDL_Event event;
+	bool running = true;
 	float start = 0.f;
 	float end = 0.f;
 	static float timer = 0.f;
 
 	while (running == true) {
-		start = SDL_GetTicks();
+	// input and time measuring
+		start = 0.001f * SDL_GetTicks();
 		const float delta = start - end;
 		while(SDL_PollEvent(&event));
-		if (event.type == SDL_QUIT) {
-			running = false;
-		}
+		if (event.type == SDL_QUIT) { running = false; }
 
-		cam.update(0.001*delta);
+	// update states
+		cam.update(delta);
 
-		timer += 0.001*delta;
+		timer += delta;
 		if (testmodel.animations.empty() == false) {
 			if (timer > testmodel.animations[0].end) { timer -= testmodel.animations[0].end; }
 			testmodel.updateAnimation(0, timer);
 		}
 
+	// rendering
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 		glm::mat4 view = cam.view();
 		shader.uniform_mat4("view", view);
-
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		shader.bind();
 		testmodel.display(&shader);
@@ -256,7 +208,7 @@ int main(int argc, char *argv[])
 	glClearColor(0.f, 0.f, 0.f, 0.f);
 	glEnable(GL_DEPTH_TEST);
 
-	game_loop(window, argv[1]);
+	render_loop(window, argv[1]);
 
 	SDL_DestroyWindow(window);
 	SDL_Quit();
