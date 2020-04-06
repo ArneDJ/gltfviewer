@@ -23,7 +23,7 @@ void main(void)
 	float metallic = metalrough.b;
 	//fcolor = vec4(vec3(metallic), 1.0);
 	//fcolor = vec4(normalbump, 1.0);
-	fcolor = vec4(basecolor, 1.0);
+	fcolor = vec4(basecolor+basedcolor, 1.0);
 
 	float gamma = 1.6;
  	fcolor.rgb = pow(fcolor.rgb, vec3(1.0/gamma));

@@ -24,7 +24,7 @@
 
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
-static GLuint bind_VAO(std::vector<uint32_t> &indexbuffer, std::vector<Vertex> &vertexbuffer)
+static GLuint bind_VAO(std::vector<uint32_t> &indexbuffer, std::vector<vertex> &vertexbuffer)
 {
 	GLuint VAO;
 	glGenVertexArrays(1, &VAO);
@@ -39,21 +39,21 @@ static GLuint bind_VAO(std::vector<uint32_t> &indexbuffer, std::vector<Vertex> &
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex)*vertexbuffer.size(), vertexbuffer.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex)*vertexbuffer.size(), vertexbuffer.data(), GL_STATIC_DRAW);
 	// positions
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), BUFFER_OFFSET(offsetof(Vertex, position)));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), BUFFER_OFFSET(offsetof(vertex, position)));
 	glEnableVertexAttribArray(0);
 	// normals
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), BUFFER_OFFSET(offsetof(Vertex, normal)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), BUFFER_OFFSET(offsetof(vertex, normal)));
 	glEnableVertexAttribArray(1);
 	// texcoords
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), BUFFER_OFFSET(offsetof(Vertex, uv0)));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(vertex), BUFFER_OFFSET(offsetof(vertex, uv)));
 	glEnableVertexAttribArray(2);
 	// joints
-	glVertexAttribIPointer(3, 4, GL_UNSIGNED_INT, sizeof(Vertex), BUFFER_OFFSET(offsetof(Vertex, joints)));
+	glVertexAttribIPointer(3, 4, GL_UNSIGNED_INT, sizeof(vertex), BUFFER_OFFSET(offsetof(vertex, joints)));
 	glEnableVertexAttribArray(3);
 	// weights
-	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), BUFFER_OFFSET(offsetof(Vertex, weights)));
+	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(vertex), BUFFER_OFFSET(offsetof(vertex, weights)));
 	glEnableVertexAttribArray(4);
 
 	return VAO;
@@ -107,9 +107,9 @@ static inline int32_t GetTypeSizeInBytes(uint32_t ty) {
   }
 }
 
-void gltf::Model::loadNode(gltf::Node *parent, const tinygltf::Node &node, uint32_t nodeIndex, const tinygltf::Model &model, std::vector<uint32_t> &indexBuffer, std::vector<Vertex> &vertexBuffer, float globalscale)
+void gltf::Model::loadNode(gltf::node *parent, const tinygltf::Node &node, uint32_t nodeIndex, const tinygltf::Model &model, std::vector<uint32_t> &indexBuffer, std::vector<vertex> &vertexBuffer, float globalscale)
 {
-	gltf::Node *newNode = new Node{};
+	gltf::node *newNode = new gltf::node{};
 	newNode->index = nodeIndex;
 	newNode->parent = parent;
 	newNode->name = node.name;
@@ -195,15 +195,13 @@ void gltf::Model::loadNode(gltf::Node *parent, const tinygltf::Node &node, uint3
 			// import vertex data
 			const float *bufferPos = nullptr;
 			const float *bufferNormals = nullptr;
-			const float *bufferTexCoordSet0 = nullptr;
-			const float *bufferTexCoordSet1 = nullptr;
+			const float *bufferTexCoordSet = nullptr;
 			const uint16_t *bufferJoints = nullptr;
 			const float *bufferWeights = nullptr;
 
 			int posByteStride;
 			int normByteStride;
-			int uv0ByteStride;
-			int uv1ByteStride;
+			int uvByteStride;
 			int jointByteStride;
 			int weightByteStride;
 
@@ -227,14 +225,8 @@ void gltf::Model::loadNode(gltf::Node *parent, const tinygltf::Node &node, uint3
 			if (primitive.attributes.find("TEXCOORD_0") != primitive.attributes.end()) {
 			const tinygltf::Accessor &uvAccessor = model.accessors[primitive.attributes.find("TEXCOORD_0")->second];
 			const tinygltf::BufferView &uvView = model.bufferViews[uvAccessor.bufferView];
-			bufferTexCoordSet0 = reinterpret_cast<const float *>(&(model.buffers[uvView.buffer].data[uvAccessor.byteOffset + uvView.byteOffset]));
-			uv0ByteStride = uvAccessor.ByteStride(uvView) ? (uvAccessor.ByteStride(uvView) / sizeof(float)) : GetTypeSizeInBytes(TINYGLTF_TYPE_VEC2);
-			}
-			if (primitive.attributes.find("TEXCOORD_1") != primitive.attributes.end()) {
-			const tinygltf::Accessor &uvAccessor = model.accessors[primitive.attributes.find("TEXCOORD_1")->second];
-			const tinygltf::BufferView &uvView = model.bufferViews[uvAccessor.bufferView];
-			bufferTexCoordSet1 = reinterpret_cast<const float *>(&(model.buffers[uvView.buffer].data[uvAccessor.byteOffset + uvView.byteOffset]));
-			uv1ByteStride = uvAccessor.ByteStride(uvView) ? (uvAccessor.ByteStride(uvView) / sizeof(float)) : GetTypeSizeInBytes(TINYGLTF_TYPE_VEC2);
+			bufferTexCoordSet = reinterpret_cast<const float *>(&(model.buffers[uvView.buffer].data[uvAccessor.byteOffset + uvView.byteOffset]));
+			uvByteStride = uvAccessor.ByteStride(uvView) ? (uvAccessor.ByteStride(uvView) / sizeof(float)) : GetTypeSizeInBytes(TINYGLTF_TYPE_VEC2);
 			}
 
 			// Skinning
@@ -256,11 +248,10 @@ void gltf::Model::loadNode(gltf::Node *parent, const tinygltf::Node &node, uint3
 			hasSkin = (bufferJoints && bufferWeights);
 
 			for (size_t v = 0; v < posAccessor.count; v++) {
-			Vertex vert{};
+			vertex vert{};
 			vert.position = glm::make_vec3(&bufferPos[v * posByteStride]);
 			vert.normal = glm::normalize(glm::vec3(bufferNormals ? glm::make_vec3(&bufferNormals[v * normByteStride]) : glm::vec3(0.0f)));
-			vert.uv0 = bufferTexCoordSet0 ? glm::make_vec2(&bufferTexCoordSet0[v * uv0ByteStride]) : glm::vec2(0.0f);
-			vert.uv1 = bufferTexCoordSet1 ? glm::make_vec2(&bufferTexCoordSet1[v * uv1ByteStride]) : glm::vec2(0.0f);
+			vert.uv = bufferTexCoordSet ? glm::make_vec2(&bufferTexCoordSet[v * uvByteStride]) : glm::vec2(0.0f);
 
 			vert.joints = hasSkin ? glm::ivec4(glm::make_vec4(&bufferJoints[v * jointByteStride])) : glm::ivec4(0.0f);
 			vert.weights = hasSkin ? glm::make_vec4(&bufferWeights[v * weightByteStride]) : glm::vec4(0.0f);
@@ -372,8 +363,8 @@ void gltf::Model::loadAnimations(tinygltf::Model &gltfModel)
 			continue;
 			}
 			channel.samplerIndex = source.sampler;
-			channel.node = nodeFromIndex(source.target_node);
-			if (!channel.node) {
+			channel.target = nodeFromIndex(source.target_node);
+			if (!channel.target) {
 			continue;
 			}
 
@@ -397,7 +388,7 @@ void gltf::Model::loadSkins(tinygltf::Model &gltfModel)
 
     // Find joint nodes
     for (int jointIndex : source.joints) {
-     Node* node = nodeFromIndex(jointIndex);
+     node* node = nodeFromIndex(jointIndex);
      if (node) {
       newSkin->joints.push_back(nodeFromIndex(jointIndex));
      }
@@ -494,7 +485,7 @@ void gltf::Model::importf(std::string fpath, float scale)
 	bool fileLoaded = binary ? gltfContext.LoadBinaryFromFile(&gltfModel, &error, &warning, fpath.c_str()) : gltfContext.LoadASCIIFromFile(&gltfModel, &error, &warning, fpath.c_str());
 
 	std::vector<uint32_t> indexBuffer;
-	std::vector<Vertex> vertexBuffer;
+	std::vector<vertex> vertexBuffer;
 
 	if (fileLoaded) {
 		loadTextures(gltfModel);
@@ -551,12 +542,12 @@ void gltf::Model::updateAnimation(uint32_t index, float time)
 					switch (channel.path) {
 					case gltf::AnimationChannel::PathType::TRANSLATION: {
 					glm::vec4 trans = glm::mix(sampler.outputsVec4[i], sampler.outputsVec4[i + 1], u);
-					channel.node->translation = glm::vec3(trans);
+					channel.target->translation = glm::vec3(trans);
 					break;
 					}
 					case gltf::AnimationChannel::PathType::SCALE: {
 					glm::vec4 trans = glm::mix(sampler.outputsVec4[i], sampler.outputsVec4[i + 1], u);
-					channel.node->scale = glm::vec3(trans);
+					channel.target->scale = glm::vec3(trans);
 					break;
 					}
 					case gltf::AnimationChannel::PathType::ROTATION: {
@@ -570,7 +561,7 @@ void gltf::Model::updateAnimation(uint32_t index, float time)
 					q2.y = sampler.outputsVec4[i + 1].y;
 					q2.z = sampler.outputsVec4[i + 1].z;
 					q2.w = sampler.outputsVec4[i + 1].w;
-					channel.node->rotation = glm::normalize(glm::slerp(q1, q2, u));
+					channel.target->rotation = glm::normalize(glm::slerp(q1, q2, u));
 					break;
 					}
 					}
@@ -593,7 +584,7 @@ void gltf::Model::display(Shader *shader)
 
 	shader->uniform_bool("skinned", !skins.empty());
 
-	for (gltf::Node *node : linearNodes) {
+	for (gltf::node *node : linearNodes) {
 		if (node->mesh) {
 			glm::mat4 m = node->getMatrix();
 			//shader->uniform_mat4("model", glm::scale(m, glm::vec3(0.1, 0.1, 0.1)));

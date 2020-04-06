@@ -4,18 +4,17 @@
 
 #define MAX_NUM_JOINTS 128u
 
-struct Vertex {
+struct vertex {
 	glm::vec3 position;
 	glm::vec3 normal;
-	glm::vec2 uv0;
-	glm::vec2 uv1;
+	glm::vec2 uv;
 	glm::ivec4 joints;
 	glm::vec4 weights;
 };
 
 namespace gltf {
 
-struct Node;
+struct node;
 
 struct Material {
 	float metallicFactor = 1.0f;
@@ -45,7 +44,7 @@ struct Primitive {
 struct AnimationChannel {
 	enum PathType { TRANSLATION, ROTATION, SCALE };
 	PathType path;
-	Node *node;
+	node *target;
 	uint32_t samplerIndex;
 };
 
@@ -77,21 +76,21 @@ struct Mesh {
 		this->uniformBlock.matrix = matrix;
 	};
 	~Mesh() {
-		for (Primitive* p : primitives) { delete p; }
+		for (Primitive *p : primitives) { delete p; }
 	};
 };
 
 struct Skin {
 	std::string name;
-	Node *skeletonRoot = nullptr;
+	node *skeletonRoot = nullptr;
 	std::vector<glm::mat4> inverseBindMatrices;
-	std::vector<Node*> joints;
+	std::vector<node*> joints;
 };
 
-struct Node {
-	Node *parent;
+struct node {
+	node *parent;
 	uint32_t index;
-	std::vector<Node*> children;
+	std::vector<node*> children;
 	glm::mat4 matrix{1.f};
 	std::string name;
 	Mesh *mesh;
@@ -107,7 +106,7 @@ struct Node {
 
 	glm::mat4 getMatrix() {
 		glm::mat4 m = localMatrix();
-		gltf::Node *p = parent;
+		gltf::node *p = parent;
 		while (p) {
 			m = p->localMatrix() * m;
 			p = p->parent;
@@ -120,11 +119,10 @@ struct Node {
 			glm::mat4 m = getMatrix();
 			if (skin) {
 			mesh->uniformBlock.matrix = m;
-			// Update join matrices
 			glm::mat4 inverseTransform = glm::inverse(m);
 			size_t numJoints = std::min((uint32_t)skin->joints.size(), MAX_NUM_JOINTS);
 			for (size_t i = 0; i < numJoints; i++) {
-			gltf::Node *jointNode = skin->joints[i];
+			gltf::node *jointNode = skin->joints[i];
 			glm::mat4 jointMat = jointNode->getMatrix() * skin->inverseBindMatrices[i];
 			jointMat = inverseTransform * jointMat;
 			mesh->uniformBlock.jointMatrix[i] = jointMat;
@@ -138,7 +136,7 @@ struct Node {
 		}
 	}
 
-	~Node() {
+	~node() {
 		if (mesh) {
 			delete mesh;
 		}
@@ -155,20 +153,20 @@ public:
 	std::vector<Animation> animations;
 private:
 	GLuint VAO = 0;
-	std::vector<Node*> nodes;
-	std::vector<Node*> linearNodes;
+	std::vector<node*> nodes;
+	std::vector<node*> linearNodes;
 	std::vector<Skin*> skins;
 	std::vector<GLuint> textures;
 	std::vector<Material> materials;
 private:
 	void loadTextures(tinygltf::Model &gltfModel);
 	void loadMaterials(tinygltf::Model &gltfModel);
-	void loadNode(gltf::Node *parent, const tinygltf::Node &node, uint32_t nodeIndex, const tinygltf::Model &model, std::vector<uint32_t> &indexBuffer, std::vector<Vertex> &vertexBuffer, float globalscale);
+	void loadNode(gltf::node *parent, const tinygltf::Node &node, uint32_t nodeIndex, const tinygltf::Model &model, std::vector<uint32_t> &indexBuffer, std::vector<vertex> &vertexBuffer, float globalscale);
 	void loadAnimations(tinygltf::Model &gltfModel);
 	void loadSkins(tinygltf::Model &gltfModel);
 private:
-	Node* findNode(Node *parent, uint32_t index) {
-		Node* nodeFound = nullptr;
+	node* findNode(node *parent, uint32_t index) {
+		node* nodeFound = nullptr;
 		if (parent->index == index) { return parent; }
 		for (auto& child : parent->children) {
 			nodeFound = findNode(child, index);
@@ -177,8 +175,8 @@ private:
 		return nodeFound;
 	}
 
-	Node* nodeFromIndex(uint32_t index) {
-		Node* nodeFound = nullptr;
+	node* nodeFromIndex(uint32_t index) {
+		node* nodeFound = nullptr;
 		for (auto &node : nodes) {
 			nodeFound = findNode(node, index);
 			if (nodeFound) { break; }
