@@ -162,30 +162,30 @@ private:
 	std::vector<GLuint> textures;
 	std::vector<material_t> materials;
 private:
-	void load_textures(tinygltf::Model &gltfModel);
-	void load_materials(tinygltf::Model &gltfModel);
+	void load_textures(tinygltf::Model &gltfmodel);
+	void load_materials(tinygltf::Model &gltfmodel);
 	void load_node(gltf::node_t *parent, const tinygltf::Node &node, uint32_t nodeIndex, const tinygltf::Model &model, std::vector<uint32_t> &indexBuffer, std::vector<vertex> &vertexBuffer, float globalscale);
 	void load_animations(tinygltf::Model &gltfModel);
 	void load_skins(tinygltf::Model &gltfModel);
 	void load_mesh(const tinygltf::Model &model, const tinygltf::Mesh &mesh, gltf::mesh_t *newmesh, std::vector<uint32_t> &indexbuffer, std::vector<vertex> &vertexbuffer);
 private:
-	node_t* findNode(node_t *parent, uint32_t index) {
-		node_t* nodeFound = nullptr;
+	node_t *findnode(node_t *parent, uint32_t index) {
+		node_t* found = nullptr;
 		if (parent->index == index) { return parent; }
-		for (auto& child : parent->children) {
-			nodeFound = findNode(child, index);
-			if (nodeFound) { break; }
+		for (auto &child : parent->children) {
+			found = findnode(child, index);
+			if (found) { break; }
 		}
-		return nodeFound;
+		return found;
 	}
 
-	node_t* nodeFromIndex(uint32_t index) {
-		node_t* nodeFound = nullptr;
+	node_t *nodefrom(uint32_t index) {
+		node_t *found = nullptr;
 		for (auto &node : nodes) {
-			nodeFound = findNode(node, index);
-			if (nodeFound) { break; }
+			found = findnode(node, index);
+			if (found) { break; }
 		}
-		return nodeFound;
+		return found;
 	}
 };
 

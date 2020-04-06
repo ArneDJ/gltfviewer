@@ -371,7 +371,7 @@ void gltf::Model::load_animations(tinygltf::Model &gltfModel)
 				channel.path = animchannel_t::pathtype::SCALE;
 			}
 			channel.samplerindex = source.sampler;
-			channel.target = nodeFromIndex(source.target_node);
+			channel.target = nodefrom(source.target_node);
 			if (!channel.target) { continue; }
 
 			animation.channels.push_back(channel);
@@ -389,14 +389,14 @@ void gltf::Model::load_skins(tinygltf::Model &gltfModel)
 
 		// Find skeleton root node
 		if (source.skeleton > -1) {
-			newskin->skeletonRoot = nodeFromIndex(source.skeleton);
+			newskin->skeletonRoot = nodefrom(source.skeleton);
 		}
 
 		// Find joint nodes
 		for (int jointindex : source.joints) {
-			node_t* node = nodeFromIndex(jointindex);
+			node_t *node = nodefrom(jointindex);
 			if (node) {
-				newskin->joints.push_back(nodeFromIndex(jointindex));
+				newskin->joints.push_back(nodefrom(jointindex));
 			}
 		}
 
@@ -413,19 +413,19 @@ void gltf::Model::load_skins(tinygltf::Model &gltfModel)
 	}
 }
 
-void gltf::Model::load_textures(tinygltf::Model &gltfModel)
+void gltf::Model::load_textures(tinygltf::Model &gltfmodel)
 {
-	for (tinygltf::Texture &tex : gltfModel.textures) {
-		tinygltf::Image image = gltfModel.images[tex.source];
+	for (tinygltf::Texture &tex : gltfmodel.textures) {
+		tinygltf::Image image = gltfmodel.images[tex.source];
 		GLuint texture;
 		texture = load_gltf_image(image);
 		textures.push_back(texture);
 	}
 }
 
-void gltf::Model::load_materials(tinygltf::Model &gltfModel)
+void gltf::Model::load_materials(tinygltf::Model &gltfmodel)
 {
-	for (tinygltf::Material &mat : gltfModel.materials) {
+	for (tinygltf::Material &mat : gltfmodel.materials) {
 		gltf::material_t material{};
 
 		// specular diffuse model
@@ -479,6 +479,9 @@ void gltf::Model::importf(std::string fpath, float scale)
 	size_t extpos = fpath.rfind('.', fpath.length());
 	if (extpos != std::string::npos) {
 		binary = (fpath.substr(extpos + 1, fpath.length() - extpos) == "glb");
+	} else {
+		std::cerr << "Could not open glTF file: " << err << std::endl;
+		return;
 	}
 
 	bool ret = binary ? loader.LoadBinaryFromFile(&model, &err, &warn, fpath.c_str()) : loader.LoadASCIIFromFile(&model, &err, &warn, fpath.c_str());
@@ -583,7 +586,6 @@ void gltf::Model::display(Shader *shader)
 	for (gltf::node_t *node : linearNodes) {
 		if (node->mesh) {
 			glm::mat4 m = node->getMatrix();
-			//shader->uniform_mat4("model", glm::scale(m, glm::vec3(0.1, 0.1, 0.1)));
 			shader->uniform_mat4("model", m);
 			shader->uniform_array_mat4("u_joint_matrix", node->mesh->uniformblock.jointcount, node->mesh->uniformblock.jointMatrix); 
 			for (const gltf::primitive_t *prim : node->mesh->primitives) {
