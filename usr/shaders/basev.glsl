@@ -13,12 +13,16 @@ uniform mat4 u_joint_matrix[MAX_JOINT_MATRICES];
 uniform bool skinned;
 
 out VERTEX {
+	vec3 worldpos;
 	vec3 normal;
 	vec2 texcoord;
 } vertex;
 
 void main(void)
 {
+	//vertex.normal = normal;
+	vertex.texcoord = texcoord;
+
 	if (skinned == true) {
 		mat4 skin_matrix =
 		weights.x * u_joint_matrix[int(joints.x)] +
@@ -26,12 +30,13 @@ void main(void)
 		weights.z * u_joint_matrix[int(joints.z)] +
 		weights.w * u_joint_matrix[int(joints.w)];
 
-		vertex.normal = normal;
-		vertex.texcoord = texcoord;
 		vec4 pos = view * model * skin_matrix * position;
-
+		vertex.normal = normalize(mat3(transpose(inverse(model * skin_matrix))) * normal);
+		vertex.worldpos = vec4(model * skin_matrix * position).xyz;
 		gl_Position = project * pos;
 	} else {
+		vertex.normal = normalize(mat3(transpose(inverse(model))) * normal);
+		vertex.worldpos = vec4(model * position).xyz;
 		gl_Position = project * view * model * position;
 	}
 }

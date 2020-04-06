@@ -83,6 +83,7 @@ static GLuint load_gltf_image(tinygltf::Image &gltfimage)
 	std::cout << "pixel_type: " << gltfimage.pixel_type << std::endl;
 	std::cout << "image size: " << gltfimage.image.size() << std::endl;
 	std::cout << texture << std::endl;
+
 	return texture;
 }
 
@@ -587,6 +588,7 @@ void gltf::Model::display(Shader *shader)
 		if (node->mesh) {
 			glm::mat4 m = node->getMatrix();
 			shader->uniform_mat4("model", m);
+			//shader->uniform_mat4("model", glm::scale(m, glm::vec3(5.f, 5.f, 5.f)));
 			shader->uniform_array_mat4("u_joint_matrix", node->mesh->uniformblock.jointcount, node->mesh->uniformblock.jointMatrix); 
 			for (const gltf::primitive_t *prim : node->mesh->primitives) {
 				shader->uniform_vec3("basedcolor", prim->material.basecolor);

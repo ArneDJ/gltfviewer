@@ -172,6 +172,7 @@ void render_loop(SDL_Window *window, std::string fpath)
 
 		glm::mat4 view = cam.view();
 		shader.uniform_mat4("view", view);
+		shader.uniform_vec3("campos", cam.eye);
 
 		shader.bind();
 		testmodel.display(&shader);
