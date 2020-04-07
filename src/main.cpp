@@ -9,14 +9,18 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "external/imgui.h"
+#include "external/imgui_impl_sdl.h"
+#include "external/imgui_impl_opengl3.h"
+
 #include "shader.hpp"
 #include "camera.hpp"
 #include "texture.hpp"
 
 #include "gltf.h"
 
-#define WINWIDTH 1280
-#define WINHEIGHT 960
+#define WINWIDTH 1920
+#define WINHEIGHT 1080
 
 #define BUFFER_OFFSET(offset) ((void *)(offset))
 
@@ -124,6 +128,14 @@ void display_skybox(struct mesh skybox)
 	glDrawElements(skybox.mode, skybox.ecount, skybox.etype, NULL);
 }
 
+static inline void start_imguiframe(SDL_Window *window)
+{
+	// Start the Dear ImGui frame
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplSDL2_NewFrame(window);
+	ImGui::NewFrame();
+}
+
 void render_loop(SDL_Window *window, std::string fpath)
 {
 	SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -150,6 +162,8 @@ void render_loop(SDL_Window *window, std::string fpath)
 	float start = 0.f;
 	float end = 0.f;
 	static float timer = 0.f;
+	unsigned long frames = 0;
+	unsigned int msperframe = 0;
 
 	while (running == true) {
 	// input and time measuring
@@ -185,9 +199,39 @@ void render_loop(SDL_Window *window, std::string fpath)
 		display_skybox(cube);
 		glDepthFunc(GL_LESS);
 
+	// debug UI
+		start_imguiframe(window);
+
+		ImGui::Begin("Debug");
+		ImGui::SetWindowSize(ImVec2(400, 100));
+		ImGui::Text("%d ms per frame", msperframe);
+		ImGui::Text("camera position xyz: %.2f, %.2f, %.2f", cam.eye.x, cam.eye.y, cam.eye.z);
+		ImGui::End();
+
+		// Render dear imgui into screen
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 		SDL_GL_SwapWindow(window);
 		end = start;
+		frames++;
+  		if (frames > 100) { msperframe = (unsigned int)(delta*1000); frames = 0; }
 	}
+}
+
+void init_imgui(SDL_Window *window, SDL_GLContext glcontext)
+{
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO &io = ImGui::GetIO(); (void)io;
+
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
+
+	// Setup Platform/Renderer bindings
+	ImGui_ImplSDL2_InitForOpenGL(window, glcontext);
+	ImGui_ImplOpenGL3_Init("#version 430");
 }
 
 int main(int argc, char *argv[])
@@ -209,7 +253,13 @@ int main(int argc, char *argv[])
 	glClearColor(0.f, 0.f, 0.f, 0.f);
 	glEnable(GL_DEPTH_TEST);
 
+	init_imgui(window, glcontext);
+
 	render_loop(window, argv[1]);
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
 
 	SDL_DestroyWindow(window);
 	SDL_Quit();
