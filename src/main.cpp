@@ -138,8 +138,6 @@ static inline void start_imguiframe(SDL_Window *window)
 
 void render_loop(SDL_Window *window, std::string fpath)
 {
-	SDL_SetRelativeMouseMode(SDL_TRUE);
-
 	gltf::Model testmodel;
 	testmodel.importf(fpath, 0.1f);
 
@@ -162,6 +160,7 @@ void render_loop(SDL_Window *window, std::string fpath)
 	float start = 0.f;
 	float end = 0.f;
 	static float timer = 0.f;
+	static float scale = 1.f;
 	unsigned long frames = 0;
 	unsigned int msperframe = 0;
 
@@ -170,10 +169,16 @@ void render_loop(SDL_Window *window, std::string fpath)
 		start = 0.001f * SDL_GetTicks();
 		const float delta = start - end;
 		while(SDL_PollEvent(&event));
+		const Uint8 *keystates = SDL_GetKeyboardState(NULL);
 		if (event.type == SDL_QUIT) { running = false; }
 
 	// update states
 		cam.update(delta);
+		if (keystates[SDL_SCANCODE_SPACE]) {
+			SDL_SetRelativeMouseMode(SDL_TRUE);
+		} else {
+			SDL_SetRelativeMouseMode(SDL_FALSE);
+		}
 
 		timer += delta;
 		if (testmodel.animations.empty() == false) {
@@ -189,7 +194,7 @@ void render_loop(SDL_Window *window, std::string fpath)
 		shader.uniform_vec3("campos", cam.eye);
 
 		shader.bind();
-		testmodel.display(&shader);
+		testmodel.display(&shader, scale);
 
 		glDepthFunc(GL_LEQUAL);
 		skybox.bind();
@@ -206,6 +211,8 @@ void render_loop(SDL_Window *window, std::string fpath)
 		ImGui::SetWindowSize(ImVec2(400, 100));
 		ImGui::Text("%d ms per frame", msperframe);
 		ImGui::Text("camera position xyz: %.2f, %.2f, %.2f", cam.eye.x, cam.eye.y, cam.eye.z);
+		ImGui::SliderFloat("model scale", &scale, 0.1f, 10.0f);
+
 		ImGui::End();
 
 		// Render dear imgui into screen

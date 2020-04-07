@@ -60,7 +60,7 @@ void main(void)
 	float roughness = metalrough.g;
 	float metallic = metalrough.b;
 	//fcolor = vec4(vec3(metallic), 1.0);
-	//fcolor = vec4(normalbump, 1.0);
+	//fcolor = vec4(basedcolor, 1.0);
 	fcolor = vec4(normal, 1.0);
 
 	float gamma = 1.6;

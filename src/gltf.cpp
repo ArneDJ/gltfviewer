@@ -239,6 +239,8 @@ void gltf::Model::load_mesh(const tinygltf::Model &model, const tinygltf::Mesh &
 
 void gltf::Model::load_node(gltf::node_t *parent, const tinygltf::Node &node, uint32_t nodeindex, const tinygltf::Model &model, std::vector<uint32_t> &indexbuffer, std::vector<vertex> &vertexbuffer, float globalscale)
 {
+	const float SCALE = 0.1f;
+
 	gltf::node_t *newnode = new gltf::node_t{};
 	newnode->index = nodeindex;
 	newnode->parent = parent;
@@ -260,6 +262,7 @@ void gltf::Model::load_node(gltf::node_t *parent, const tinygltf::Node &node, ui
 	glm::vec3 scale = glm::vec3(1.0f);
 	if (node.scale.size() == 3) {
 		scale = glm::make_vec3(node.scale.data());
+		newnode->scale = scale;
 	}
 	if (node.matrix.size() == 16) {
 		newnode->matrix = glm::make_mat4x4(node.matrix.data());
@@ -578,7 +581,7 @@ void gltf::Model::updateAnimation(uint32_t index, float time)
 	}
 }
 
-void gltf::Model::display(Shader *shader)
+void gltf::Model::display(Shader *shader, float scale)
 {
 	glBindVertexArray(VAO);
 
@@ -587,8 +590,9 @@ void gltf::Model::display(Shader *shader)
 	for (gltf::node_t *node : linearNodes) {
 		if (node->mesh) {
 			glm::mat4 m = node->getMatrix();
-			shader->uniform_mat4("model", m);
-			//shader->uniform_mat4("model", glm::scale(m, glm::vec3(5.f, 5.f, 5.f)));
+//shader->uniform_mat4("model", m);
+glm::mat4 S = glm::scale(glm::mat4(1.f), glm::vec3(scale));
+shader->uniform_mat4("model", S * m);
 			shader->uniform_array_mat4("u_joint_matrix", node->mesh->uniformblock.jointcount, node->mesh->uniformblock.jointMatrix); 
 			for (const gltf::primitive_t *prim : node->mesh->primitives) {
 				shader->uniform_vec3("basedcolor", prim->material.basecolor);

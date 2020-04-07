@@ -152,7 +152,7 @@ class Model {
 public:
 	void importf(std::string fpath, float scale = 1.f);
 	void updateAnimation(uint32_t index, float time);
-	void display(Shader *shader);
+	void display(Shader *shader, float scale);
 	std::vector<animation_t> animations;
 private:
 	GLuint VAO = 0;
