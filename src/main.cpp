@@ -172,13 +172,14 @@ void render_loop(SDL_Window *window, std::string fpath)
 		const Uint8 *keystates = SDL_GetKeyboardState(NULL);
 		if (event.type == SDL_QUIT) { running = false; }
 
-	// update states
-		cam.update(delta);
 		if (keystates[SDL_SCANCODE_SPACE]) {
 			SDL_SetRelativeMouseMode(SDL_TRUE);
 		} else {
 			SDL_SetRelativeMouseMode(SDL_FALSE);
 		}
+
+	// update states
+		cam.update(delta);
 
 		timer += delta;
 		if (testmodel.animations.empty() == false) {

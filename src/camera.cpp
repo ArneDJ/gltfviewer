@@ -28,6 +28,8 @@ void Camera::update(float delta)
 	const Uint8 *keystates = SDL_GetKeyboardState(NULL);
 	SDL_GetRelativeMouseState(&x, &y);
 
+	if (SDL_GetRelativeMouseMode() == SDL_FALSE) { x = 0; y = 0; }
+
 	yaw += (float)x * sensitivity * delta;
 	pitch -= (float)y * sensitivity * delta;
 
