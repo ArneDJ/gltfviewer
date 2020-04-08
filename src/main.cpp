@@ -153,7 +153,7 @@ void render_loop(SDL_Window *window, std::string fpath)
  	GLuint cubemap = load_cubemap_texture(cubemap_fpath);
 	Shader skybox = skybox_shader();
 	Shader shader = base_shader();
-	Camera cam(glm::vec3(1.0, 1.0, 1.0));
+	Camera cam(glm::vec3(10.0, 10.0, 10.0));
 
 	SDL_Event event;
 	bool running = true;
@@ -209,10 +209,11 @@ void render_loop(SDL_Window *window, std::string fpath)
 		start_imguiframe(window);
 
 		ImGui::Begin("Debug");
-		ImGui::SetWindowSize(ImVec2(400, 100));
+		ImGui::SetWindowSize(ImVec2(400, 200));
 		ImGui::Text("%d ms per frame", msperframe);
 		ImGui::Text("camera position xyz: %.2f, %.2f, %.2f", cam.eye.x, cam.eye.y, cam.eye.z);
 		ImGui::SliderFloat("model scale", &scale, 0.1f, 10.0f);
+		if (ImGui::Button("Exit")) { running = false; }
 
 		ImGui::End();
 

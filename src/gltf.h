@@ -20,11 +20,11 @@ struct material_t {
 	float metallicf = 1.0f;
 	float roughnessf = 1.0f;
 	glm::vec4 basecolor = glm::vec4(0.0f);
-	GLuint basecolormap;
-	GLuint metalroughmap;
-	GLuint normalmap;
-	GLuint occlusionmap;
-	GLuint emissivemap;
+	GLuint basecolormap = 0;
+	GLuint metalroughmap = 0;
+	GLuint normalmap = 0;
+	GLuint occlusionmap = 0;
+	GLuint emissivemap = 0;
 };
 
 struct primitive_t {

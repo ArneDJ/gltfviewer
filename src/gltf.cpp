@@ -72,9 +72,17 @@ static GLuint load_gltf_image(tinygltf::Image &gltfimage)
 	image.height = gltfimage.height;
 	image.data = buffer;
 
-	texture = gen_texture(&image, GL_SRGB8_ALPHA8, GL_RGBA, GL_UNSIGNED_BYTE);
+	GLenum format = GL_RGBA;
 
-	//if (buffer != nullptr) { delete [] buffer; }
+	if (gltfimage.component == 1) {
+		format = GL_RED;
+	} else if (gltfimage.component == 2) {
+		format = GL_RG;
+	} else if (gltfimage.component == 3) {
+		format = GL_RGB;
+	}
+
+	texture = gen_texture(&image, GL_SRGB8_ALPHA8, format, GL_UNSIGNED_BYTE);
 
 	std::cout << gltfimage.width << std::endl;
 	std::cout << gltfimage.height << std::endl;

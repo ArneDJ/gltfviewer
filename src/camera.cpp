@@ -33,26 +33,24 @@ void Camera::update(float delta)
 	yaw += (float)x * sensitivity * delta;
 	pitch -= (float)y * sensitivity * delta;
 
-	const float MAX_ANGLE = 1.57f;
-	const float MIN_ANGLE = -1.57f;
+	const float MAX_ANGLE = -0.1f;
+	const float MIN_ANGLE = -3.14f;
 	if (pitch > MAX_ANGLE) { pitch = MAX_ANGLE; }
 	if (pitch < MIN_ANGLE) { pitch = MIN_ANGLE; }
 
-	// point the camera in a direction based on mouse input
-	center.x = cos(yaw) * cos(pitch);
-	center.y = sin(pitch);
-	center.z = sin(yaw) * cos(pitch);
-	center = glm::normalize(center);
+	const float phi = pitch;
+	const float theta = -yaw;
+	center.x  = eye.x * sin(phi) * cos(theta);
+	center.y  = eye.y * cos(phi);
+	center.z  = eye.z * sin(phi) * sin(theta);
 
 	// move the camera in the new direction
 	const float modifier = speed * delta;
-	if (keystates[SDL_SCANCODE_W]) { eye += modifier * center; }
-	if (keystates[SDL_SCANCODE_S]) { eye -= modifier * center; }
-	if (keystates[SDL_SCANCODE_D]) { eye += modifier * glm::normalize(glm::cross(center, up)); }
-	if (keystates[SDL_SCANCODE_A]) { eye -= modifier * glm::normalize(glm::cross(center, up)); }
+	if (keystates[SDL_SCANCODE_W]) { eye -= modifier; }
+	if (keystates[SDL_SCANCODE_S]) { eye += modifier; }
 }
 
 glm::mat4 Camera::view(void)
 {
-	return glm::lookAt(eye, eye + center, up);
+	return glm::lookAt(center, glm::vec3(0.f, 1.f, 0.f), up);
 }
