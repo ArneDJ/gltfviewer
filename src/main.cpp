@@ -85,7 +85,7 @@ Shader base_shader(void)
 {
 	struct shaderinfo pipeline[] = {
 		{GL_VERTEX_SHADER, "usr/shaders/basev.glsl"},
-		{GL_FRAGMENT_SHADER, "usr/shaders/basef.glsl"},
+		{GL_FRAGMENT_SHADER, "usr/shaders/pbr.glsl"},
 		{GL_NONE, NULL}
 	};
 
@@ -192,7 +192,7 @@ void render_loop(SDL_Window *window, std::string fpath)
 
 		glm::mat4 view = cam.view();
 		shader.uniform_mat4("view", view);
-		shader.uniform_vec3("campos", cam.eye);
+		shader.uniform_vec3("campos", cam.center);
 
 		shader.bind();
 		testmodel.display(&shader, scale);
