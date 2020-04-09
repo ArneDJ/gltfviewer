@@ -132,7 +132,7 @@ vec3 getPointShade(vec3 pointToLight, MaterialInfo materialInfo, vec3 normal, ve
         vec3 specContrib = F * Vis * D;
 
         // Obtain final intensity as reflectance (BRDF) scaled by the energy of the light (cosine law)
-        return clamp(angularInfo.NdotL, 0.05, 1.0) * (diffuseContrib + specContrib);
+        return angularInfo.NdotL * (diffuseContrib + specContrib);
     }
 
     return vec3(0.0, 0.0, 0.0);
@@ -148,23 +148,6 @@ vec3 applyDirectionalLight(Light light, MaterialInfo materialInfo, vec3 normal, 
 vec3 LINEARtoSRGB(vec3 color)
 {
     return pow(color, vec3(INV_GAMMA));
-}
-
-vec3 toneMap(vec3 color)
-{
-    //return toneMapUncharted(color);
-
-    /*
-#ifdef TONEMAP_HEJLRICHARD
-    return toneMapHejlRichard(color);
-#endif
-
-#ifdef TONEMAP_ACES
-    return toneMapACES(color);
-#endif
-*/
-
-    return LINEARtoSRGB(color);
 }
 
 void main(void)
@@ -183,6 +166,7 @@ void main(void)
 
 	baseColor = texture2D(base, fragment.texcoord);
 	baseColor.rgb += basedcolor;
+	baseColor.rgb = pow(baseColor.rgb, vec3(2.2));
 
 	diffuseColor = baseColor.rgb * (vec3(1.0) - f0) * (1.0 - metallic);
 
@@ -218,12 +202,12 @@ void main(void)
 	vec3 view = normalize(campos - fragment.worldpos);
 
 	Light light = Light(
-	vec3(-1.0, -1.0, -1.0),
+	vec3(-0.7399, -0.6428, -0.1983),
 	vec3(1.0, 0.9, 0.8),
-	5.0
+	3.4
 	);
 
 	color += applyDirectionalLight(light, materialInfo, normal, view);
 
-	fcolor = vec4(toneMap(color), 1.0);
+	fcolor = vec4(LINEARtoSRGB(color), 1.0);
 }

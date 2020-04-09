@@ -16,7 +16,6 @@
 
 #define TINYGLTF_IMPLEMENTATION
 #define TINYGLTF_NO_STB_IMAGE_WRITE
-#define STBI_MSC_SECURE_CRT
 
 #include "texture.hpp"
 #include "shader.hpp"
@@ -63,8 +62,7 @@ static GLuint load_gltf_image(tinygltf::Image &gltfimage)
 {
 	GLuint texture;
 
-	unsigned char *buffer = nullptr;
-	buffer = &gltfimage.image[0];
+	unsigned char *buffer = &gltfimage.image[0];
 
 	struct image_t image;
 	image.nchannels = gltfimage.component;
@@ -73,6 +71,7 @@ static GLuint load_gltf_image(tinygltf::Image &gltfimage)
 	image.data = buffer;
 
 	GLenum format = GL_RGBA;
+	GLenum internalformat = GL_RGB5_A1;
 
 	if (gltfimage.component == 1) {
 		format = GL_RED;
@@ -82,15 +81,7 @@ static GLuint load_gltf_image(tinygltf::Image &gltfimage)
 		format = GL_RGB;
 	}
 
-	texture = gen_texture(&image, GL_SRGB8_ALPHA8, format, GL_UNSIGNED_BYTE);
-
-	std::cout << gltfimage.width << std::endl;
-	std::cout << gltfimage.height << std::endl;
-	std::cout << "component: " << gltfimage.component << std::endl;
-	std::cout << "bits: " << gltfimage.bits << std::endl;
-	std::cout << "pixel_type: " << gltfimage.pixel_type << std::endl;
-	std::cout << "image size: " << gltfimage.image.size() << std::endl;
-	std::cout << texture << std::endl;
+	texture = gen_texture(&image, internalformat, format, GL_UNSIGNED_BYTE);
 
 	return texture;
 }

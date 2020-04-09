@@ -130,8 +130,9 @@ GLuint load_DDS_texture(const char *fpath)
 // generate mip mapped texture
 GLuint gen_texture(struct image_t *image, GLenum internalformat, GLenum format, GLenum type)
 {
-	const GLsizei NUM_MIPMAPS = 8;
 	GLuint texture;
+
+	GLsizei NUM_MIPMAPS = 6;
 
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);

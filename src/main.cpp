@@ -139,6 +139,10 @@ static inline void start_imguiframe(SDL_Window *window)
 void render_loop(SDL_Window *window, std::string fpath)
 {
 	gltf::Model testmodel;
+	for (int i = 0; i < 100; i++) {
+	//gltf::Model testmodel1;
+	//testmodel1.importf(fpath, 0.1f);
+	}
 	testmodel.importf(fpath, 0.1f);
 
 	const char *cubemap_fpath[6] = {
