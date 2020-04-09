@@ -184,15 +184,14 @@ void main(void)
 	);
 
 	// LIGHTING
-
 	vec3 color = vec3(0.0, 0.0, 0.0);
 	vec3 normal = fragment.normal;
 	vec3 view = normalize(campos - fragment.worldpos);
 
 	Light light = Light(
-	vec3(-0.7399, -0.6428, -0.1983),
-	vec3(1.0, 0.9, 0.8),
-	3.4
+		vec3(-0.7399, -0.6428, -0.1983),
+		vec3(1.0, 0.9, 0.8),
+		3.4
 	);
 
 	color += applyDirectionalLight(light, materialInfo, normal, view);
