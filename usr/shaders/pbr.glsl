@@ -1,4 +1,5 @@
 #version 430 core
+// shader source : https://github.com/KhronosGroup/glTF-Sample-Viewer/blob/master/src/shaders/metallic-roughness.frag
 
 out vec4 fcolor;
 
@@ -16,35 +17,34 @@ in VERTEX {
 
 struct MaterialInfo
 {
-    float perceptualRoughness;    // roughness value, as authored by the model creator (input to shader)
-    vec3 reflectance0;            // full reflectance color (normal incidence angle)
+	float perceptualRoughness;    // roughness value, as authored by the model creator (input to shader)
+	vec3 reflectance0;            // full reflectance color (normal incidence angle)
 
-    float alphaRoughness;         // roughness mapped to a more linear change in the roughness (proposed by [2])
-    vec3 diffuseColor;            // color contribution from diffuse lighting
+	float alphaRoughness;         // roughness mapped to a more linear change in the roughness (proposed by [2])
+	vec3 diffuseColor;            // color contribution from diffuse lighting
 
-    vec3 reflectance90;           // reflectance color at grazing angle
-    vec3 specularColor;           // color contribution from specular lighting
+	vec3 reflectance90;           // reflectance color at grazing angle
+	vec3 specularColor;           // color contribution from specular lighting
 };
 
 struct Light
 {
-    vec3 direction;
-    vec3 color;
-    float intensity;
+	vec3 direction;
+	vec3 color;
+	float intensity;
 };
 
 struct AngularInfo
 {
-    float NdotL;                  // cos angle between normal and light direction
-    float NdotV;                  // cos angle between normal and view direction
-    float NdotH;                  // cos angle between normal and half vector
-    float LdotH;                  // cos angle between light direction and half vector
+	float NdotL;                  // cos angle between normal and light direction
+	float NdotV;                  // cos angle between normal and view direction
+	float NdotH;                  // cos angle between normal and half vector
+	float LdotH;                  // cos angle between light direction and half vector
 
-    float VdotH;                  // cos angle between view direction and half vector
+	float VdotH;                  // cos angle between view direction and half vector
 
-    vec3 padding;
+	vec3 padding;
 };
-
 
 const float M_PI = 3.141592653589793;
 const float GAMMA = 2.2;
@@ -52,102 +52,90 @@ const float INV_GAMMA = 1.0/2.2;
 
 vec4 SRGBtoLINEAR(vec4 srgbIn)
 {
-    return vec4(pow(srgbIn.xyz, vec3(GAMMA)), srgbIn.w);
+	return vec4(pow(srgbIn.xyz, vec3(GAMMA)), srgbIn.w);
 }
 
 vec3 diffuse(MaterialInfo materialInfo)
 {
-    return materialInfo.diffuseColor / M_PI;
+	return materialInfo.diffuseColor / M_PI;
 }
-
 
 AngularInfo getAngularInfo(vec3 pointToLight, vec3 normal, vec3 view)
 {
-    // Standard one-letter names
-    vec3 n = normalize(normal);           // Outward direction of surface point
-    vec3 v = normalize(view);             // Direction from surface point to view
-    vec3 l = normalize(pointToLight);     // Direction from surface point to light
-    vec3 h = normalize(l + v);            // Direction of the vector between l and v
+	// Standard one-letter names
+	vec3 n = normalize(normal);           // Outward direction of surface point
+	vec3 v = normalize(view);             // Direction from surface point to view
+	vec3 l = normalize(pointToLight);     // Direction from surface point to light
+	vec3 h = normalize(l + v);            // Direction of the vector between l and v
 
-    float NdotL = clamp(dot(n, l), 0.0, 1.0);
-    float NdotV = clamp(dot(n, v), 0.0, 1.0);
-    float NdotH = clamp(dot(n, h), 0.0, 1.0);
-    float LdotH = clamp(dot(l, h), 0.0, 1.0);
-    float VdotH = clamp(dot(v, h), 0.0, 1.0);
+	float NdotL = clamp(dot(n, l), 0.0, 1.0);
+	float NdotV = clamp(dot(n, v), 0.0, 1.0);
+	float NdotH = clamp(dot(n, h), 0.0, 1.0);
+	float LdotH = clamp(dot(l, h), 0.0, 1.0);
+	float VdotH = clamp(dot(v, h), 0.0, 1.0);
 
-    return AngularInfo(
-        NdotL,
-        NdotV,
-        NdotH,
-        LdotH,
-        VdotH,
-        vec3(0, 0, 0)
-    );
+	return AngularInfo( NdotL, NdotV, NdotH, LdotH, VdotH, vec3(0, 0, 0));
 }
 
 // The following equation models the Fresnel reflectance term of the spec equation (aka F())
 // Implementation of fresnel from [4], Equation 15
 vec3 specularReflection(MaterialInfo materialInfo, AngularInfo angularInfo)
 {
-    return materialInfo.reflectance0 + (materialInfo.reflectance90 - materialInfo.reflectance0) * pow(clamp(1.0 - angularInfo.VdotH, 0.0, 1.0), 5.0);
+	return materialInfo.reflectance0 + (materialInfo.reflectance90 - materialInfo.reflectance0) * pow(clamp(1.0 - angularInfo.VdotH, 0.0, 1.0), 5.0);
 }
 
 float visibilityOcclusion(MaterialInfo materialInfo, AngularInfo angularInfo)
 {
-    float NdotL = angularInfo.NdotL;
-    float NdotV = angularInfo.NdotV;
-    float alphaRoughnessSq = materialInfo.alphaRoughness * materialInfo.alphaRoughness;
+	float NdotL = angularInfo.NdotL;
+	float NdotV = angularInfo.NdotV;
+	float alphaRoughnessSq = materialInfo.alphaRoughness * materialInfo.alphaRoughness;
 
-    float GGXV = NdotL * sqrt(NdotV * NdotV * (1.0 - alphaRoughnessSq) + alphaRoughnessSq);
-    float GGXL = NdotV * sqrt(NdotL * NdotL * (1.0 - alphaRoughnessSq) + alphaRoughnessSq);
+	float GGXV = NdotL * sqrt(NdotV * NdotV * (1.0 - alphaRoughnessSq) + alphaRoughnessSq);
+	float GGXL = NdotV * sqrt(NdotL * NdotL * (1.0 - alphaRoughnessSq) + alphaRoughnessSq);
 
-    float GGX = GGXV + GGXL;
-    if (GGX > 0.0)
-    {
-        return 0.5 / GGX;
-    }
-    return 0.0;
+	float GGX = GGXV + GGXL;
+	if (GGX > 0.0) { return 0.5 / GGX; }
+	return 0.0;
 }
 
 float microfacetDistribution(MaterialInfo materialInfo, AngularInfo angularInfo)
 {
-    float alphaRoughnessSq = materialInfo.alphaRoughness * materialInfo.alphaRoughness;
-    float f = (angularInfo.NdotH * alphaRoughnessSq - angularInfo.NdotH) * angularInfo.NdotH + 1.0;
-    return alphaRoughnessSq / (M_PI * f * f);
+	float alphaRoughnessSq = materialInfo.alphaRoughness * materialInfo.alphaRoughness;
+	float f = (angularInfo.NdotH * alphaRoughnessSq - angularInfo.NdotH) * angularInfo.NdotH + 1.0;
+	return alphaRoughnessSq / (M_PI * f * f);
 }
 
 vec3 getPointShade(vec3 pointToLight, MaterialInfo materialInfo, vec3 normal, vec3 view)
 {
-    AngularInfo angularInfo = getAngularInfo(pointToLight, normal, view);
+	AngularInfo angularInfo = getAngularInfo(pointToLight, normal, view);
 
-    if (angularInfo.NdotL > 0.0 || angularInfo.NdotV > 0.0)
-    {
-        // Calculate the shading terms for the microfacet specular shading model
-        vec3 F = specularReflection(materialInfo, angularInfo);
-        float Vis = visibilityOcclusion(materialInfo, angularInfo);
-        float D = microfacetDistribution(materialInfo, angularInfo);
+	if (angularInfo.NdotL > 0.0 || angularInfo.NdotV > 0.0) {
+		// Calculate the shading terms for the microfacet specular shading model
+		vec3 F = specularReflection(materialInfo, angularInfo);
+		float Vis = visibilityOcclusion(materialInfo, angularInfo);
+		float D = microfacetDistribution(materialInfo, angularInfo);
 
-        // Calculation of analytical lighting contribution
-        vec3 diffuseContrib = (1.0 - F) * diffuse(materialInfo);
-        vec3 specContrib = F * Vis * D;
+		// Calculation of analytical lighting contribution
+		vec3 diffuseContrib = (1.0 - F) * diffuse(materialInfo);
+		vec3 specContrib = F * Vis * D;
 
-        // Obtain final intensity as reflectance (BRDF) scaled by the energy of the light (cosine law)
-        return angularInfo.NdotL * (diffuseContrib + specContrib);
-    }
+		// Obtain final intensity as reflectance (BRDF) scaled by the energy of the light (cosine law)
+		return angularInfo.NdotL * (diffuseContrib + specContrib);
+	}
 
-    return vec3(0.0, 0.0, 0.0);
+	return vec3(0.0, 0.0, 0.0);
 }
 
 vec3 applyDirectionalLight(Light light, MaterialInfo materialInfo, vec3 normal, vec3 view)
 {
-    vec3 pointToLight = -light.direction;
-    vec3 shade = getPointShade(pointToLight, materialInfo, normal, view);
-    return light.intensity * light.color * shade;
+	vec3 pointToLight = -light.direction;
+	vec3 shade = getPointShade(pointToLight, materialInfo, normal, view);
+	return light.intensity * light.color * shade;
 }
 
 vec3 LINEARtoSRGB(vec3 color)
 {
-    return pow(color, vec3(INV_GAMMA));
+	return pow(color, vec3(INV_GAMMA));
 }
 
 void main(void)
@@ -160,13 +148,13 @@ void main(void)
 	vec3 f0 = vec3(0.04);
 
 	vec4 mrSample = texture2D(metallicroughness, fragment.texcoord);
-	mrSample.rgb = pow(mrSample.rgb, vec3(1.0/2.2));
+	mrSample.rgb = pow(mrSample.rgb, vec3(INV_GAMMA));
 	perceptualRoughness = mrSample.g * 1.0;
 	metallic = mrSample.b * 1.0;
 
 	baseColor = texture2D(base, fragment.texcoord);
 	baseColor.rgb += basedcolor;
-	baseColor.rgb = pow(baseColor.rgb, vec3(2.2));
+	baseColor.rgb = pow(baseColor.rgb, vec3(GAMMA));
 
 	diffuseColor = baseColor.rgb * (vec3(1.0) - f0) * (1.0 - metallic);
 

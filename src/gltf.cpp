@@ -236,10 +236,8 @@ void gltf::Model::load_mesh(const tinygltf::Model &model, const tinygltf::Mesh &
 	}
 }
 
-void gltf::Model::load_node(gltf::node_t *parent, const tinygltf::Node &node, uint32_t nodeindex, const tinygltf::Model &model, std::vector<uint32_t> &indexbuffer, std::vector<vertex> &vertexbuffer, float globalscale)
+void gltf::Model::load_node(gltf::node_t *parent, const tinygltf::Node &node, uint32_t nodeindex, const tinygltf::Model &model, std::vector<uint32_t> &indexbuffer, std::vector<vertex> &vertexbuffer)
 {
-	const float SCALE = 0.1f;
-
 	gltf::node_t *newnode = new gltf::node_t{};
 	newnode->index = nodeindex;
 	newnode->parent = parent;
@@ -270,7 +268,7 @@ void gltf::Model::load_node(gltf::node_t *parent, const tinygltf::Node &node, ui
 	// Node with children
 	if (node.children.size() > 0) {
 		for (size_t i = 0; i < node.children.size(); i++) {
-			load_node(newnode, model.nodes[node.children[i]], node.children[i], model, indexbuffer, vertexbuffer, globalscale);
+			load_node(newnode, model.nodes[node.children[i]], node.children[i], model, indexbuffer, vertexbuffer);
 		}
 	}
 
@@ -471,7 +469,7 @@ void gltf::Model::load_materials(tinygltf::Model &gltfmodel)
 	materials.push_back(material_t{});
 }
 
-void gltf::Model::importf(std::string fpath, float scale)
+void gltf::Model::importf(std::string fpath)
 {
 	tinygltf::Model model;
 	tinygltf::TinyGLTF loader;
@@ -506,7 +504,7 @@ void gltf::Model::importf(std::string fpath, float scale)
 	const tinygltf::Scene &scene = model.scenes[model.defaultScene > -1 ? model.defaultScene : 0];
 	for (size_t i = 0; i < scene.nodes.size(); i++) {
 		const tinygltf::Node node = model.nodes[scene.nodes[i]];
-		load_node(nullptr, node, scene.nodes[i], model, indexbuffer, vertexbuffer, scale);
+		load_node(nullptr, node, scene.nodes[i], model, indexbuffer, vertexbuffer);
 	}
 
 	VAO = bind_VAO(indexbuffer, vertexbuffer);
@@ -589,9 +587,8 @@ void gltf::Model::display(Shader *shader, float scale)
 	for (gltf::node_t *node : linearNodes) {
 		if (node->mesh) {
 			glm::mat4 m = node->getMatrix();
-//shader->uniform_mat4("model", m);
-glm::mat4 S = glm::scale(glm::mat4(1.f), glm::vec3(scale));
-shader->uniform_mat4("model", S * m);
+			glm::mat4 S = glm::scale(glm::mat4(1.f), glm::vec3(scale));
+			shader->uniform_mat4("model", S * m);
 			shader->uniform_array_mat4("u_joint_matrix", node->mesh->uniformblock.jointcount, node->mesh->uniformblock.jointMatrix); 
 			for (const gltf::primitive_t *prim : node->mesh->primitives) {
 				shader->uniform_vec3("basedcolor", prim->material.basecolor);

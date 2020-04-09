@@ -150,7 +150,7 @@ struct node_t {
 
 class Model {
 public:
-	void importf(std::string fpath, float scale = 1.f);
+	void importf(std::string fpath);
 	void updateAnimation(uint32_t index, float time);
 	void display(Shader *shader, float scale);
 	std::vector<animation_t> animations;
@@ -164,7 +164,7 @@ private:
 private:
 	void load_textures(tinygltf::Model &gltfmodel);
 	void load_materials(tinygltf::Model &gltfmodel);
-	void load_node(gltf::node_t *parent, const tinygltf::Node &node, uint32_t nodeIndex, const tinygltf::Model &model, std::vector<uint32_t> &indexBuffer, std::vector<vertex> &vertexBuffer, float globalscale);
+	void load_node(gltf::node_t *parent, const tinygltf::Node &node, uint32_t nodeIndex, const tinygltf::Model &model, std::vector<uint32_t> &indexBuffer, std::vector<vertex> &vertexBuffer);
 	void load_animations(tinygltf::Model &gltfModel);
 	void load_skins(tinygltf::Model &gltfModel);
 	void load_mesh(const tinygltf::Model &model, const tinygltf::Mesh &mesh, gltf::mesh_t *newmesh, std::vector<uint32_t> &indexbuffer, std::vector<vertex> &vertexbuffer);

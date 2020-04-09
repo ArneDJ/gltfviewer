@@ -139,11 +139,7 @@ static inline void start_imguiframe(SDL_Window *window)
 void render_loop(SDL_Window *window, std::string fpath)
 {
 	gltf::Model testmodel;
-	for (int i = 0; i < 100; i++) {
-	//gltf::Model testmodel1;
-	//testmodel1.importf(fpath, 0.1f);
-	}
-	testmodel.importf(fpath, 0.1f);
+	testmodel.importf(fpath);
 
 	const char *cubemap_fpath[6] = {
 	"media/textures/skybox/dust_ft.tga",
@@ -176,7 +172,7 @@ void render_loop(SDL_Window *window, std::string fpath)
 		const Uint8 *keystates = SDL_GetKeyboardState(NULL);
 		if (event.type == SDL_QUIT) { running = false; }
 
-		if (keystates[SDL_SCANCODE_SPACE]) {
+		if(keystates[SDL_SCANCODE_SPACE]) {
 			SDL_SetRelativeMouseMode(SDL_TRUE);
 		} else {
 			SDL_SetRelativeMouseMode(SDL_FALSE);
