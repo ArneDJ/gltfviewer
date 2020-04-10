@@ -28,6 +28,7 @@ unsigned char *load_DDS(const char *fpath, struct DDS *header)
 	header->linear_size = *(uint32_t*)&(header_buf[16]);
 	header->mip_levels = *(uint32_t*)&(header_buf[24]);
 	header->dxt_codec = *(uint32_t*)&(header_buf[80]);
+	header->dwcaps2 = *(uint32_t*)&(header_buf[108]);
 
 	/* now get the actual image data */
 	unsigned char *image;
