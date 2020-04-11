@@ -429,15 +429,6 @@ void gltf::Model::load_materials(tinygltf::Model &gltfmodel)
 	for (tinygltf::Material &mat : gltfmodel.materials) {
 		gltf::material_t material{};
 
-		// specular diffuse model
-		if (mat.extensions.find("KHR_materials_pbrSpecularGlossiness") != mat.extensions.end()) {
-			auto ext = mat.extensions.find("KHR_materials_pbrSpecularGlossiness");
-			if (ext->second.Has("diffuseTexture")) {
-				auto index = ext->second.Get("diffuseTexture").Get("index");
-				material.basecolormap = textures[index.Get<int>()];
-			}
-		}
-
 		if (mat.values.find("baseColorTexture") != mat.values.end()) {
 			material.basecolormap = textures[mat.values["baseColorTexture"].TextureIndex()];
 		}

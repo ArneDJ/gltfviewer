@@ -182,10 +182,11 @@ void render_loop(SDL_Window *window, std::string fpath)
 	// update states
 		cam.update(delta);
 
+		static int item_current = 0;
 		timer += delta;
 		if (testmodel.animations.empty() == false) {
-			if (timer > testmodel.animations[0].end) { timer -= testmodel.animations[0].end; }
-			testmodel.updateAnimation(0, timer);
+			if (timer > testmodel.animations[item_current].end) { timer -= testmodel.animations[item_current].end; }
+			testmodel.updateAnimation(item_current, timer);
 		}
 
 	// rendering
@@ -212,8 +213,23 @@ void render_loop(SDL_Window *window, std::string fpath)
 		ImGui::Begin("Debug");
 		ImGui::SetWindowSize(ImVec2(400, 200));
 		ImGui::Text("%d ms per frame", msperframe);
-		ImGui::Text("camera position xyz: %.2f, %.2f, %.2f", cam.eye.x, cam.eye.y, cam.eye.z);
+		ImGui::Text("camera distance: %.2f", cam.eye.x);
 		ImGui::SliderFloat("model scale", &scale, 0.1f, 10.0f);
+
+		if (testmodel.animations.size() > 0) {
+			std::vector<std::string> animationNames;
+			for (const auto animation : testmodel.animations) {
+				animationNames.push_back(animation.name);
+			}
+			std::vector<const char*> charitems;
+			charitems.reserve(animationNames.size());
+			for (size_t i = 0; i < animationNames.size(); i++) {
+				charitems.push_back(animationNames[i].c_str());
+			}
+			uint32_t itemCount = static_cast<uint32_t>(charitems.size());
+			ImGui::Combo("animation select", &item_current, &charitems[0], itemCount);
+		}
+
 		if (ImGui::Button("Exit")) { running = false; }
 
 		ImGui::End();
