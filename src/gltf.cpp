@@ -285,6 +285,7 @@ void gltf::Model::load_node(gltf::node_t *parent, const tinygltf::Node &node, ui
 	} else {
 		nodes.push_back(newnode);
 	}
+
 	linearNodes.push_back(newnode);
 }
 
@@ -456,7 +457,7 @@ void gltf::Model::load_materials(tinygltf::Model &gltfmodel)
 
 		materials.push_back(material);
 	}
-	// Push a default material at the end of the list for meshes with no material assigned
+
 	materials.push_back(material_t{});
 }
 

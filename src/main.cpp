@@ -217,17 +217,11 @@ void render_loop(SDL_Window *window, std::string fpath)
 		ImGui::SliderFloat("model scale", &scale, 0.1f, 10.0f);
 
 		if (testmodel.animations.size() > 0) {
-			std::vector<std::string> animationNames;
-			for (const auto animation : testmodel.animations) {
-				animationNames.push_back(animation.name);
-			}
 			std::vector<const char*> charitems;
-			charitems.reserve(animationNames.size());
-			for (size_t i = 0; i < animationNames.size(); i++) {
-				charitems.push_back(animationNames[i].c_str());
+			for (size_t i = 0; i < testmodel.animations.size(); i++) {
+				charitems.push_back(testmodel.animations[i].name.c_str());
 			}
-			uint32_t itemCount = static_cast<uint32_t>(charitems.size());
-			ImGui::Combo("animation select", &item_current, &charitems[0], itemCount);
+			ImGui::Combo("animation select", &item_current, &charitems[0], charitems.size());
 		}
 
 		if (ImGui::Button("Exit")) { running = false; }
