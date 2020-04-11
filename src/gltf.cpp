@@ -62,13 +62,11 @@ static GLuint load_gltf_image(tinygltf::Image &gltfimage)
 {
 	GLuint texture;
 
-	unsigned char *buffer = &gltfimage.image[0];
-
 	struct image_t image;
 	image.nchannels = gltfimage.component;
 	image.width = gltfimage.width;
 	image.height = gltfimage.height;
-	image.data = buffer;
+	image.data = &gltfimage.image[0];
 
 	GLenum format = GL_RGBA;
 	GLenum internalformat = GL_RGB5_A1;
@@ -114,31 +112,31 @@ static uint32_t load_indices(const tinygltf::Model &model, const tinygltf::Primi
 	uint32_t indexcount = 0;
 
 	const tinygltf::Accessor &accessor = model.accessors[primitive.indices > -1 ? primitive.indices : 0];
-	const tinygltf::BufferView &bufferView = model.bufferViews[accessor.bufferView];
-	const tinygltf::Buffer &buffer = model.buffers[bufferView.buffer];
+	const tinygltf::BufferView &bufview = model.bufferViews[accessor.bufferView];
+	const tinygltf::Buffer &buffer = model.buffers[bufview.buffer];
 
 	indexcount = static_cast<uint32_t>(accessor.count);
-	const void *dataPtr = &(buffer.data[accessor.byteOffset + bufferView.byteOffset]);
+	const void *data = &(buffer.data[accessor.byteOffset + bufview.byteOffset]);
 
 	switch (accessor.componentType) {
 	case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT: {
-		const uint32_t *buf = static_cast<const uint32_t*>(dataPtr);
+		const uint32_t *buf = static_cast<const uint32_t*>(data);
 		for (size_t index = 0; index < accessor.count; index++) {
 			indexbuffer.push_back(buf[index]);
 		}
 		break;
 	}
 	case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT: {
-		const uint16_t *buf = static_cast<const uint16_t*>(dataPtr);
+		const uint16_t *buf = static_cast<const uint16_t*>(data);
 		for (size_t index = 0; index < accessor.count; index++) {
-		indexbuffer.push_back(buf[index]);
+			indexbuffer.push_back(buf[index]);
 		}
 		break;
 	}
 	case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE: {
-		const uint8_t *buf = static_cast<const uint8_t*>(dataPtr);
+		const uint8_t *buf = static_cast<const uint8_t*>(data);
 		for (size_t index = 0; index < accessor.count; index++) {
-		indexbuffer.push_back(buf[index]);
+			indexbuffer.push_back(buf[index]);
 		}
 		break;
 	}
@@ -307,13 +305,13 @@ void gltf::Model::load_animations(tinygltf::Model &gltfModel)
 			// Read sampler input time values
 			{
 				const tinygltf::Accessor &accessor = gltfModel.accessors[samp.input];
-				const tinygltf::BufferView &bufferView = gltfModel.bufferViews[accessor.bufferView];
-				const tinygltf::Buffer &buffer = gltfModel.buffers[bufferView.buffer];
+				const tinygltf::BufferView &bufview = gltfModel.bufferViews[accessor.bufferView];
+				const tinygltf::Buffer &buffer = gltfModel.buffers[bufview.buffer];
 
 				assert(accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT);
 
-				const void *dataPtr = &buffer.data[accessor.byteOffset + bufferView.byteOffset];
-				const float *buf = static_cast<const float*>(dataPtr);
+				const void *data = &buffer.data[accessor.byteOffset + bufview.byteOffset];
+				const float *buf = static_cast<const float*>(data);
 				for (size_t index = 0; index < accessor.count; index++) {
 					sampler.inputs.push_back(buf[index]);
 				}
@@ -327,23 +325,23 @@ void gltf::Model::load_animations(tinygltf::Model &gltfModel)
 			// Read sampler output T/R/S values
 			{
 				const tinygltf::Accessor &accessor = gltfModel.accessors[samp.output];
-				const tinygltf::BufferView &bufferView = gltfModel.bufferViews[accessor.bufferView];
-				const tinygltf::Buffer &buffer = gltfModel.buffers[bufferView.buffer];
+				const tinygltf::BufferView &bufview = gltfModel.bufferViews[accessor.bufferView];
+				const tinygltf::Buffer &buffer = gltfModel.buffers[bufview.buffer];
 
 				assert(accessor.componentType == TINYGLTF_COMPONENT_TYPE_FLOAT);
 
-				const void *dataPtr = &buffer.data[accessor.byteOffset + bufferView.byteOffset];
+				const void *data = &buffer.data[accessor.byteOffset + bufview.byteOffset];
 
 				switch (accessor.type) {
 				case TINYGLTF_TYPE_VEC3: {
-					const glm::vec3 *buf = static_cast<const glm::vec3*>(dataPtr);
+					const glm::vec3 *buf = static_cast<const glm::vec3*>(data);
 					for (size_t index = 0; index < accessor.count; index++) {
 						sampler.outputs.push_back(glm::vec4(buf[index], 0.0f));
 					}
 					break;
 				}
 				case TINYGLTF_TYPE_VEC4: {
-					const glm::vec4 *buf = static_cast<const glm::vec4*>(dataPtr);
+					const glm::vec4 *buf = static_cast<const glm::vec4*>(data);
 					for (size_t index = 0; index < accessor.count; index++) {
 						sampler.outputs.push_back(buf[index]);
 					}
@@ -405,10 +403,10 @@ void gltf::Model::load_skins(tinygltf::Model &gltfModel)
 		// Get inverse bind matrices from buffer
 		if (source.inverseBindMatrices > -1) {
 			const tinygltf::Accessor &accessor = gltfModel.accessors[source.inverseBindMatrices];
-			const tinygltf::BufferView &bufferview = gltfModel.bufferViews[accessor.bufferView];
-			const tinygltf::Buffer &buffer = gltfModel.buffers[bufferview.buffer];
+			const tinygltf::BufferView &bufview = gltfModel.bufferViews[accessor.bufferView];
+			const tinygltf::Buffer &buffer = gltfModel.buffers[bufview.buffer];
 			newskin->inversebinds.resize(accessor.count);
-			memcpy(newskin->inversebinds.data(), &buffer.data[accessor.byteOffset + bufferview.byteOffset], accessor.count * sizeof(glm::mat4));
+			memcpy(newskin->inversebinds.data(), &buffer.data[accessor.byteOffset + bufview.byteOffset], accessor.count * sizeof(glm::mat4));
 		}
 
 		skins.push_back(newskin);
