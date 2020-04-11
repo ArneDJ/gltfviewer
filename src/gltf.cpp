@@ -7,7 +7,6 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 
-#define STB_IMAGE_IMPLEMENTATION
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>

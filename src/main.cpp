@@ -142,14 +142,14 @@ void render_loop(SDL_Window *window, std::string fpath)
 	testmodel.importf(fpath);
 
 	const char *CUBEMAP_TEXTURES[6] = {
-	"media/textures/skybox/dust_ft.dds",
-	"media/textures/skybox/dust_bk.dds",
-	"media/textures/skybox/dust_up.dds",
-	"media/textures/skybox/dust_dn.dds",
-	"media/textures/skybox/dust_rt.dds",
-	"media/textures/skybox/dust_lf.dds",
+	"media/textures/skybox/dust_ft.tga",
+	"media/textures/skybox/dust_bk.tga",
+	"media/textures/skybox/dust_up.tga",
+	"media/textures/skybox/dust_dn.tga",
+	"media/textures/skybox/dust_rt.tga",
+	"media/textures/skybox/dust_lf.tga",
 	};
-	GLuint cubemap = load_DDS_cubemap(CUBEMAP_TEXTURES);
+	GLuint cubemap = load_TGA_cubemap(CUBEMAP_TEXTURES);
 
 	struct mesh cube = make_cubemap();
 	Shader skybox = skybox_shader();
