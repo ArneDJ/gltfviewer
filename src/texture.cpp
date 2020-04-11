@@ -3,43 +3,9 @@
 #include <GL/gl.h>
 
 #include "dds.hpp"
-#define STB_IMAGE_IMPLEMENTATION
-#include "external/stb_image.h"
-
 #include "texture.hpp"
 
-GLuint load_texture(const char *fpath)
-{
-	GLuint texture;
-
-	int width, height, nchannels;
-	stbi_set_flip_vertically_on_load(true);
-	unsigned char *image = stbi_load(fpath, &width, &height, &nchannels, 0); 
-	if (!image) {
-		std::cerr << "error: failed to load texture " << fpath << std::endl;
-		return 0;
-	}
-
-	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	stbi_image_free(image);
-
-	return texture;
-}
-
-GLuint load_cubemap_texture(const char *fpath[6])
+GLuint load_DDS_cubemap(const char *fpath[6])
 {
 	GLuint texture;
 
@@ -48,16 +14,26 @@ GLuint load_cubemap_texture(const char *fpath[6])
 
 	for (int face = 0; face < 6; face++) {
 		GLenum target = GL_TEXTURE_CUBE_MAP_POSITIVE_X + face;
-		int width, height, nchannels;
-		unsigned char *image = stbi_load(fpath[face], &width, &height, &nchannels, 0); 
-		if (image) {
-			glTexImage2D(target, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-			stbi_image_free(image);
+		struct DDS header;
+		unsigned char *image = load_DDS(fpath[face], &header);
+		/* find valid DXT format*/
+		uint32_t components = (header.dxt_codec == FOURCC_DXT1) ? 3 : 4;
+		uint32_t format;
+		uint32_t block_size;
+		switch (header.dxt_codec) {
+		case FOURCC_DXT1: format = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT; block_size = 8; break;
+		case FOURCC_DXT3: format = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT; block_size = 16; break;
+		case FOURCC_DXT5: format = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT; block_size = 16; break;
+		default:
+		std::cerr << "error: no valid DXT format found for " << fpath << std::endl;
+		delete [] image;
+		return 0;
+		};
+		unsigned int size = ((header.width+3)/4) * ((header.height+3)/4) * block_size;
+		glCompressedTexImage2D(target, 0, format,
+		header.width, header.height, 0, size, image);
 
-		} else {
-			std::cerr << "cubemap error: failed to load " << fpath[face] << std::endl;
-			return 0;
-		}
+		delete [] image;
 	}
 
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -66,7 +42,7 @@ GLuint load_cubemap_texture(const char *fpath[6])
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
 	return texture;
 }

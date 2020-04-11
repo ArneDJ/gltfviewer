@@ -16,7 +16,6 @@
 #include "shader.hpp"
 #include "camera.hpp"
 #include "texture.hpp"
-#include "ktx.h"
 
 #include "gltf.h"
 
@@ -142,7 +141,15 @@ void render_loop(SDL_Window *window, std::string fpath)
 	gltf::Model testmodel;
 	testmodel.importf(fpath);
 
-	GLuint cubetest = load_KTX_cubemap("media/textures/skybox/mountaincube.ktx");
+	const char *CUBEMAP_TEXTURES[6] = {
+	"media/textures/skybox/dust_ft.dds",
+	"media/textures/skybox/dust_bk.dds",
+	"media/textures/skybox/dust_up.dds",
+	"media/textures/skybox/dust_dn.dds",
+	"media/textures/skybox/dust_rt.dds",
+	"media/textures/skybox/dust_lf.dds",
+	};
+	GLuint cubemap = load_DDS_cubemap(CUBEMAP_TEXTURES);
 
 	struct mesh cube = make_cubemap();
 	Shader skybox = skybox_shader();
@@ -195,7 +202,7 @@ void render_loop(SDL_Window *window, std::string fpath)
 		skybox.bind();
 		skybox.uniform_mat4("view", view);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, cubetest);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap);
 		display_skybox(cube);
 		glDepthFunc(GL_LESS);
 
